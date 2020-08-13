@@ -5,12 +5,10 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"text/tabwriter"
 	"time"
 
 	"github.com/beeeeeeenny/zkcmd/common/zookeeper"
-	"github.com/pkg/errors"
 	"github.com/samuel/go-zookeeper/zk"
 	"github.com/spf13/cobra"
 )
@@ -19,41 +17,42 @@ var (
 	setCreate   bool
 	force       bool
 	dataVersion string
-	outStat     bool
+	isStat      bool
 
 	ephemeral bool
 	sequence  bool
 )
 
 func init() {
-	rootCmd.AddCommand(nodeCmd)
+	rootCmd.AddCommand(znodeCmd)
 
-	nodeCmd.AddCommand(nodeLsCmd)
-	nodeLsCmd.Flags().BoolVarP(&outStat, "stat", "s", false, "node stat info")
+	znodeCmd.AddCommand(znodeLsCmd)
+	znodeLsCmd.Flags().BoolVarP(&isStat, "stat", "s", false, "znode stat info")
 
-	nodeCmd.AddCommand(nodeLsnCmd)
+	znodeCmd.AddCommand(znodeLsnCmd)
 
-	nodeCmd.AddCommand(nodeGetCmd)
-	nodeGetCmd.Flags().BoolVarP(&outStat, "stat", "s", false, "node stat info")
+	znodeCmd.AddCommand(znodeGetCmd)
+	znodeGetCmd.Flags().BoolVarP(&isStat, "stat", "s", false, "znode stat info")
 
-	nodeCmd.AddCommand(nodeDeleteCmd)
-	nodeDeleteCmd.Flags().StringVarP(&dataVersion, "version", "v", "", "node data version")
-	nodeDeleteCmd.Flags().BoolVarP(&force, "force", "f", false, "will force delete multi-level node, like: deleteall")
+	znodeCmd.AddCommand(znodeDeleteCmd)
+	znodeDeleteCmd.Flags().StringVarP(&dataVersion, "version", "v", "", "znode data version")
+	znodeDeleteCmd.Flags().BoolVarP(&force, "force", "f", false, "will force delete multi-level znode, like: deleteall")
 
-	nodeCmd.AddCommand(nodeSetCmd)
-	nodeSetCmd.Flags().BoolVarP(&setCreate, "create", "c", false, "will create node if node does not exist, but does not directly create multi-level node")
-	nodeSetCmd.Flags().BoolVarP(&force, "force", "f", false, "will force create multi-level node if node does not exist")
-	nodeSetCmd.Flags().StringVarP(&dataVersion, "version", "v", "", "node data version")
-	nodeSetCmd.Flags().BoolVarP(&outStat, "stat", "s", false, "node stat info")
+	znodeCmd.AddCommand(znodeSetCmd)
+	znodeSetCmd.Flags().BoolVarP(&setCreate, "create", "c", false, "will create znode if znode does not exist, but does not directly create multi-level znode")
+	znodeSetCmd.Flags().BoolVarP(&force, "force", "f", false, "will force create multi-level znode if znode does not exist")
+	znodeSetCmd.Flags().StringVarP(&dataVersion, "version", "v", "", "znode data version")
+	znodeSetCmd.Flags().BoolVarP(&isStat, "stat", "s", false, "znode stat info")
 
-	nodeCmd.AddCommand(nodeCreateCmd)
-	nodeCreateCmd.Flags().BoolVarP(&force, "force", "f", false, "will force create multi-level node if node does not exist")
-	nodeCreateCmd.Flags().BoolVarP(&ephemeral, "ephemeral", "e", false, "create ephemeral node")
-	nodeCreateCmd.Flags().BoolVarP(&sequence, "sequence", "s", false, "create sequence node")
+	znodeCmd.AddCommand(znodeCreateCmd)
+	znodeCreateCmd.Flags().BoolVarP(&force, "force", "f", false, "will force create multi-level znode if znode does not exist")
+	znodeCreateCmd.Flags().BoolVarP(&ephemeral, "ephemeral", "e", false, "create ephemeral znode")
+	znodeCreateCmd.Flags().BoolVarP(&sequence, "sequence", "s", false, "create sequence znode")
 }
 
-var nodeCmd = &cobra.Command{
-	Use: "node",
+var znodeCmd = &cobra.Command{
+	Use:   "znode",
+	Short: "Znode command",
 }
 
 func outputStat(stat *zk.Stat) {
@@ -72,9 +71,9 @@ func outputStat(stat *zk.Stat) {
 	w.Flush()
 }
 
-var nodeLsCmd = &cobra.Command{
-	Use:   "ls",
-	Short: "List children, the path default: /",
+var znodeLsCmd = &cobra.Command{
+	Use:   "ls [flags] [path]",
+	Short: "List znode children, the path default: /",
 	Args:  cobra.MinimumNArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
 		newZKClient()
@@ -103,15 +102,15 @@ var nodeLsCmd = &cobra.Command{
 			w.Flush()
 		}
 
-		if outStat {
+		if isStat {
 			outputStat(stat)
 		}
 	},
 }
 
-var nodeLsnCmd = &cobra.Command{
-	Use:   "lsn",
-	Short: "List all node, the path default: /",
+var znodeLsnCmd = &cobra.Command{
+	Use:   "ll [flags] [path]",
+	Short: "List all znode has no children, the path default: /",
 	Args:  cobra.MinimumNArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
 		newZKClient()
@@ -128,7 +127,7 @@ var nodeLsnCmd = &cobra.Command{
 		fmt.Fprintf(w, "ID\tPath\t\n")
 
 		if stat.NumChildren != 0 {
-			ns, err := zkcli.GetNodes(path)
+			ns, err := zkcli.GetZnodes(path)
 			checkError(err)
 			for i, n := range ns {
 				fmt.Fprintf(w, "%v\t%v\t\n", i+1, n)
@@ -138,9 +137,9 @@ var nodeLsnCmd = &cobra.Command{
 	},
 }
 
-var nodeGetCmd = &cobra.Command{
-	Use:   "get",
-	Short: "Get node value",
+var znodeGetCmd = &cobra.Command{
+	Use:   "get [flags] path",
+	Short: "Get znode value",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		newZKClient()
@@ -153,15 +152,15 @@ var nodeGetCmd = &cobra.Command{
 		fmt.Fprintf(w, "Value:      \t%v\t\n", string(d))
 		w.Flush()
 
-		if outStat {
+		if isStat {
 			outputStat(stat)
 		}
 	},
 }
 
-var nodeSetCmd = &cobra.Command{
-	Use:   "set",
-	Short: "Update node value",
+var znodeSetCmd = &cobra.Command{
+	Use:   "set [flags] path data",
+	Short: "Update znode value",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		newZKClient()
@@ -173,13 +172,7 @@ var nodeSetCmd = &cobra.Command{
 		checkError(err)
 
 		if exist {
-			version := stat.Version
-			if dataVersion != "" {
-				dv, err := strconv.Atoi(dataVersion)
-				checkError(errors.Wrap(err, "version invalid"))
-
-				version = int32(dv)
-			}
+			version := checkDataVersion(stat.Version)
 
 			_, err = zkcli.Set(path, []byte(data), version)
 			checkError(err)
@@ -204,7 +197,7 @@ var nodeSetCmd = &cobra.Command{
 		exist, stat, err = zkcli.Exists(path)
 		checkError(err)
 
-		if exist && outStat {
+		if exist && isStat {
 			outputStat(stat)
 		}
 
@@ -212,19 +205,24 @@ var nodeSetCmd = &cobra.Command{
 	},
 }
 
-var nodeCreateCmd = &cobra.Command{
-	Use:   "create",
-	Short: "Create node",
-	Args:  cobra.MinimumNArgs(2),
+var znodeCreateCmd = &cobra.Command{
+	Use:   "create [flags] path [data] [acl]",
+	Short: "Create znode",
+	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		newZKClient()
 
 		path := args[0]
-		data := args[1]
+
+		var data string
+		if len(args) == 2 {
+			data = args[1]
+		}
 
 		// check acl
 		var acl string
 		if len(args) > 2 {
+			data = args[1]
 			acl = args[2]
 		}
 
@@ -275,9 +273,9 @@ var nodeCreateCmd = &cobra.Command{
 	},
 }
 
-var nodeDeleteCmd = &cobra.Command{
-	Use:   "delete",
-	Short: "Delete node",
+var znodeDeleteCmd = &cobra.Command{
+	Use:   "delete [flags] path",
+	Short: "Delete znode",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		newZKClient()
@@ -297,13 +295,7 @@ var nodeDeleteCmd = &cobra.Command{
 				return
 			}
 
-			version := stat.Version
-			if dataVersion != "" {
-				dv, err := strconv.Atoi(dataVersion)
-				checkError(errors.Wrap(err, "version invalid"))
-
-				version = int32(dv)
-			}
+			version := checkDataVersion(stat.Version)
 
 			err = zkcli.Delete(args[0], version)
 			checkError(err)

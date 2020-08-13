@@ -1,6 +1,7 @@
 package zookeeper
 
 import (
+	"fmt"
 	"strings"
 	"unicode/utf8"
 
@@ -121,4 +122,55 @@ func parseACL(acl string) (zk.ACL, error) {
 		Scheme: as[0],
 		ID:     id,
 	}, nil
+}
+
+// FormatACLs format ACL to string
+func FormatACLs(acls []zk.ACL) string {
+	if len(acls) == 0 {
+		return ""
+	}
+
+	aclstrs := make([]string, len(acls))
+	for i, a := range acls {
+		ps := permsToString(a.Perms)
+		aclstrs[i] = a.Scheme + ":" + a.ID + ":" + ps
+	}
+
+	return strings.Join(aclstrs, ",")
+}
+
+func permsToString(perms int32) string {
+	if perms == 0 {
+		return ""
+	}
+
+	var permstr string
+
+	p := fmt.Sprintf("%05b", perms)
+	for i, pb := range []byte(p) {
+		switch i {
+		case 0:
+			if pb == '1' {
+				permstr += "a"
+			}
+		case 1:
+			if pb == '1' {
+				permstr += "d"
+			}
+		case 2:
+			if pb == '1' {
+				permstr += "c"
+			}
+		case 3:
+			if pb == '1' {
+				permstr += "w"
+			}
+		case 4:
+			if pb == '1' {
+				permstr += "r"
+			}
+		}
+	}
+
+	return permstr
 }

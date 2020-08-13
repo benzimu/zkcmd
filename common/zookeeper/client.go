@@ -62,8 +62,8 @@ func (c *Client) walkNodes(path string, paths *[]string) error {
 	return nil
 }
 
-// GetNodes get zk nodes in the path
-func (c *Client) GetNodes(path string) ([]string, error) {
+// GetZnodes get zk nodes in the path
+func (c *Client) GetZnodes(path string) ([]string, error) {
 	paths := make([]string, 0)
 
 	_, _, err := c.Exists(path)

@@ -13,7 +13,7 @@ func init() {
 var versionCmd = &cobra.Command{
 	Use:     "version",
 	Aliases: []string{"v"},
-	Short:   "Print the version number of zkcmd",
+	Short:   "Print version information of zkcmd and quit",
 	Run: func(cmd *cobra.Command, args []string) {
 		version.ShowVersion()
 	},
