@@ -8,7 +8,6 @@ type logger struct {
 
 func (l logger) Printf(format string, a ...interface{}) {
 	if l.enable {
-		fmt.Printf(format, a...)
-		fmt.Printf("\n")
+		fmt.Printf("go-zookeeper: "+format+"\n", a...)
 	}
 }
