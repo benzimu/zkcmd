@@ -26,11 +26,8 @@ func saveConfigFile(s string) {
 	checkError(errors.Wrap(err, "fail to get homedir"))
 
 	filePath := filepath.Join(home, ".zkcmd.yaml")
-	if _, err := os.Stat(filePath); err != nil && err != os.ErrNotExist {
-		checkError(err)
-	}
 
-	f, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0644)
+	f, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	checkError(err)
 	defer f.Close()
 
