@@ -284,7 +284,6 @@ var znodeDeleteCmd = &cobra.Command{
 		checkError(err)
 
 		if exist {
-			fmt.Println("#######: ", force)
 			if force {
 				err = zookeeper.ValidatePath(args[0], false)
 				checkError(err)
