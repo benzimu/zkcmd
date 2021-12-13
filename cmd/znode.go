@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/beeeeeeenny/zkcmd/common/zookeeper"
-	"github.com/samuel/go-zookeeper/zk"
+	"github.com/go-zookeeper/zk"
 	"github.com/spf13/cobra"
 )
 
