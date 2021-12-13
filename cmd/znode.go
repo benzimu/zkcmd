@@ -208,7 +208,11 @@ var znodeSetCmd = &cobra.Command{
 var znodeCreateCmd = &cobra.Command{
 	Use:   "create [flags] path [data] [acl]",
 	Short: "Create znode",
-	Args:  cobra.MinimumNArgs(1),
+	Example: `  zkcmd znode create /test
+  zkcmd znode create -f /test/1/2
+  zkcmd znode create -f /test/1/2 'data'
+  zkcmd znode create -f /test/1/2 'data' world:anyone:cdrwa`,
+	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		newZKClient()
 
