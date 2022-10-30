@@ -5,11 +5,13 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"text/tabwriter"
 	"time"
 
-	"github.com/beeeeeeenny/zkcmd/common/zookeeper"
+	"github.com/benzimu/zkcmd/common/zookeeper"
 	"github.com/go-zookeeper/zk"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -53,22 +55,6 @@ func init() {
 var znodeCmd = &cobra.Command{
 	Use:   "znode",
 	Short: "Znode command",
-}
-
-func outputStat(stat *zk.Stat) {
-	w := tabwriter.NewWriter(os.Stdout, 6, 4, 3, ' ', 0)
-	fmt.Fprintf(w, "----------\t\n")
-	fmt.Fprintf(w, "Czxid\t%#x\t\n", stat.Czxid)
-	fmt.Fprintf(w, "Mzxid\t%#x\t\n", stat.Mzxid)
-	fmt.Fprintf(w, "Pzxid\t%#x\t\n", stat.Pzxid)
-	fmt.Fprintf(w, "Ctime\t%v\t\n", time.Unix(stat.Ctime/1000, 0))
-	fmt.Fprintf(w, "Mtime\t%v\t\n", time.Unix(stat.Mtime/1000, 0))
-	fmt.Fprintf(w, "DataVersion\t%v\t\n", stat.Version)
-	fmt.Fprintf(w, "Cversion\t%v\t\n", stat.Cversion)
-	fmt.Fprintf(w, "AclVersion\t%v\t\n", stat.Aversion)
-	fmt.Fprintf(w, "EphemeralOwner\t%v\t\n", stat.EphemeralOwner)
-	fmt.Fprintf(w, "DataLength\t%v\t\n", stat.DataLength)
-	w.Flush()
 }
 
 var znodeLsCmd = &cobra.Command{
@@ -308,4 +294,31 @@ var znodeDeleteCmd = &cobra.Command{
 
 		checkError(zk.ErrNoNode)
 	},
+}
+
+func outputStat(stat *zk.Stat) {
+	w := tabwriter.NewWriter(os.Stdout, 6, 4, 3, ' ', 0)
+	fmt.Fprintf(w, "----------\t\n")
+	fmt.Fprintf(w, "Czxid\t%#x\t\n", stat.Czxid)
+	fmt.Fprintf(w, "Mzxid\t%#x\t\n", stat.Mzxid)
+	fmt.Fprintf(w, "Pzxid\t%#x\t\n", stat.Pzxid)
+	fmt.Fprintf(w, "Ctime\t%v\t\n", time.Unix(stat.Ctime/1000, 0))
+	fmt.Fprintf(w, "Mtime\t%v\t\n", time.Unix(stat.Mtime/1000, 0))
+	fmt.Fprintf(w, "DataVersion\t%v\t\n", stat.Version)
+	fmt.Fprintf(w, "Cversion\t%v\t\n", stat.Cversion)
+	fmt.Fprintf(w, "AclVersion\t%v\t\n", stat.Aversion)
+	fmt.Fprintf(w, "EphemeralOwner\t%v\t\n", stat.EphemeralOwner)
+	fmt.Fprintf(w, "DataLength\t%v\t\n", stat.DataLength)
+	w.Flush()
+}
+
+func checkDataVersion(curVersion int32) int32 {
+	if dataVersion != "" {
+		dv, err := strconv.Atoi(dataVersion)
+		checkError(errors.Wrap(err, "version invalid"))
+
+		curVersion = int32(dv)
+	}
+
+	return curVersion
 }

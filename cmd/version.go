@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/beeeeeeenny/zkcmd/common/version"
+	"github.com/benzimu/zkcmd/common/version"
 
 	"github.com/spf13/cobra"
 )

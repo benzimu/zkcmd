@@ -7,7 +7,7 @@ ZKCmd: ZooKeeper command line tool, written in Go.
 - Install from source:
 
 ```bash
-$> go install github.com/beeeeeeenny/zkcmd
+$> go install github.com/benzimu/zkcmd
 ```
 
 ## Usage

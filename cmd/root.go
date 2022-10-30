@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/beeeeeeenny/zkcmd/common/zookeeper"
+	"github.com/benzimu/zkcmd/common/zookeeper"
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"

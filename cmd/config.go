@@ -4,17 +4,28 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
+	"github.com/mitchellh/go-homedir"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
 func init() {
 	rootCmd.AddCommand(configCmd)
+
+	configCmd.AddCommand(configInitCmd)
+	configCmd.AddCommand(configCatCmd)
 }
 
 var configCmd = &cobra.Command{
 	Use:   "config",
+	Short: "Zkcmd config",
+}
+
+var configInitCmd = &cobra.Command{
+	Use:   "init",
 	Short: "Init zkcmd config",
 	Run: func(cmd *cobra.Command, args []string) {
 		reader := bufio.NewReader(os.Stdin)
@@ -64,5 +75,41 @@ acl:`
 
 		conf := confServer + confACL + "\n"
 		saveConfigFile(conf)
+
+		fmt.Println("Config path:", getConfigFilePath())
+		fmt.Println("Config data:")
+		fmt.Println(conf)
 	},
+}
+
+var configCatCmd = &cobra.Command{
+	Use:   "cat",
+	Short: "cat zkcmd config",
+	Run: func(cmd *cobra.Command, args []string) {
+		cfgPath := getConfigFilePath()
+		f, err := os.ReadFile(cfgPath)
+		checkError(err)
+
+		fmt.Println("Config path:", getConfigFilePath())
+		fmt.Println("Config data:")
+		fmt.Println(string(f))
+	},
+}
+
+func saveConfigFile(s string) {
+	cfgFilePath := getConfigFilePath()
+
+	f, err := os.OpenFile(cfgFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	checkError(err)
+	defer f.Close()
+
+	_, err = f.WriteString(s)
+	checkError(err)
+}
+
+func getConfigFilePath() string {
+	home, err := homedir.Dir()
+	checkError(errors.Wrap(err, "fail to get homedir"))
+
+	return filepath.Join(home, ".zkcmd.yaml")
 }
