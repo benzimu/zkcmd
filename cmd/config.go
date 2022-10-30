@@ -33,6 +33,7 @@ var configInitCmd = &cobra.Command{
 		fmt.Println("Please input zookeeper cluster addresses, multiple addresses with a comma (default is 127.0.0.1:2181) > ")
 		server, err := reader.ReadString('\n')
 		checkError(err)
+
 		serverTrim := strings.TrimSpace(server)
 
 		confServer := `server:`
@@ -49,35 +50,32 @@ var configInitCmd = &cobra.Command{
 
 		confACL := `
 acl:`
-		fmt.Println("Please input zookeeper cluster ACL, EX: \"digest user:password\" > ")
-	aclScan:
+		fmt.Println("Please input zookeeper cluster ACL, multiple ACL with a comma. EX: \"user:password\" > ")
 		acl, err := reader.ReadString('\n')
 		checkError(err)
+
 		aclTrim := strings.TrimSpace(acl)
 
 		if aclTrim != "" {
-			as := strings.Split(aclTrim, " ")
-			if len(as) < 2 {
-				fmt.Println("Invalid ACL input, EX: \"digest user:password\"")
-				os.Exit(1)
-			}
+			as := strings.Split(aclTrim, ",")
+			for _, s := range as {
+				ss := strings.Split(s, ":")
+				if len(ss) < 2 {
+					fmt.Printf("Invalid ACL input: %s, EX: \"user:password\"\n", s)
+					os.Exit(1)
+				}
 
-			ss := strings.Split(as[1], ":")
-			if len(ss) < 2 {
-				fmt.Println("Invalid ACL input, EX: \"digest user:password\"")
-				os.Exit(1)
-			}
-
-			confACL += fmt.Sprintf(`
+				confACL += fmt.Sprintf(`
   - %s`, aclTrim)
-			goto aclScan
+			}
 		}
 
 		conf := confServer + confACL + "\n"
 		saveConfigFile(conf)
 
-		fmt.Println("Config path:", getConfigFilePath())
-		fmt.Println("Config data:")
+		fmt.Println("########################################")
+		fmt.Println("##### Config path:", getConfigFilePath())
+		fmt.Println("##### Config data:")
 		fmt.Println(conf)
 	},
 }
@@ -90,8 +88,9 @@ var configCatCmd = &cobra.Command{
 		f, err := os.ReadFile(cfgPath)
 		checkError(err)
 
-		fmt.Println("Config path:", getConfigFilePath())
-		fmt.Println("Config data:")
+		fmt.Println("########################################")
+		fmt.Println("##### Config path:", getConfigFilePath())
+		fmt.Println("##### Config data:")
 		fmt.Println(string(f))
 	},
 }

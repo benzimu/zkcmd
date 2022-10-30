@@ -1,6 +1,6 @@
 package zookeeper
 
-import "fmt"
+import "log"
 
 type logger struct {
 	enable bool
@@ -8,6 +8,6 @@ type logger struct {
 
 func (l logger) Printf(format string, a ...interface{}) {
 	if l.enable {
-		fmt.Printf("go-zookeeper: "+format+"\n", a...)
+		log.Printf("go-zookeeper: "+format+"\n", a...)
 	}
 }

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/benzimu/zkcmd/common/zookeeper"
@@ -13,6 +14,7 @@ import (
 
 var (
 	zkcli *zookeeper.Client
+	acl   []string
 
 	cfgFile string
 	server  []string
@@ -36,7 +38,6 @@ func Execute() {
 }
 
 func init() {
-
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.zkcmd.yaml)")
 	rootCmd.PersistentFlags().StringSliceVar(&server, "server", nil,
 		"zookeeper server address, multiple addresses with a comma (default is 127.0.0.1:2181)")
@@ -68,22 +69,27 @@ func initConfig() {
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		if verbose {
-			fmt.Println("Using config file:", viper.ConfigFileUsed())
+			log.Println("Using config file:", viper.ConfigFileUsed())
 		}
+
+		server = viper.GetStringSlice("server")
+		acl = viper.GetStringSlice("acl")
 	}
 }
 
 // newZKClient new zookeeper client, if server non-empty
 func newZKClient() {
-	if len(server) == 0 {
-		server = viper.GetStringSlice("server")
-	}
-
 	var err error
 	zkcli, err = zookeeper.New(server)
 	checkError(errors.Wrap(err, "new zk client"))
 
 	zkcli.EnableLogging(verbose)
+
+	for _, a := range acl {
+		err = zkcli.AddAuth("digest", []byte(a))
+		checkError(errors.Wrap(err, "add auth error"))
+	}
+
 }
 
 func checkError(err error) {
