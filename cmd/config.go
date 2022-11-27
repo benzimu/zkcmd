@@ -21,7 +21,7 @@ func init() {
 
 var configCmd = &cobra.Command{
 	Use:   "config",
-	Short: "Zkcmd config",
+	Short: "zkcmd config init and cat",
 }
 
 var configInitCmd = &cobra.Command{
@@ -30,47 +30,19 @@ var configInitCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		reader := bufio.NewReader(os.Stdin)
 
-		fmt.Println("Please input zookeeper cluster addresses, multiple addresses with a comma (default is 127.0.0.1:2181) > ")
-		server, err := reader.ReadString('\n')
-		checkError(err)
+		// input cluster address
+		confServer := inputClusterAddress(reader)
 
-		serverTrim := strings.TrimSpace(server)
+		// input cluster ACL
+		confACL := inputClusterACL(reader)
 
-		confServer := `server:`
-		if serverTrim == "" {
-			confServer += `
-  - 127.0.0.1:2181`
-		} else {
-			ss := strings.Split(serverTrim, ",")
-			for _, s := range ss {
-				confServer += fmt.Sprintf(`
-  - %s`, s)
-			}
-		}
+		// input cluster AdminServer address
+		confAdminServer := inputAdminServerAddress(reader)
 
-		confACL := `
-acl:`
-		fmt.Println("Please input zookeeper cluster ACL, multiple ACL with a comma. EX: \"user:password\" > ")
-		acl, err := reader.ReadString('\n')
-		checkError(err)
+		// input cluster AdminServer command root URL
+		confCommandURL := inputAdminServerCommandURL(reader)
 
-		aclTrim := strings.TrimSpace(acl)
-
-		if aclTrim != "" {
-			as := strings.Split(aclTrim, ",")
-			for _, s := range as {
-				ss := strings.Split(s, ":")
-				if len(ss) < 2 {
-					fmt.Printf("Invalid ACL input: %s, EX: \"user:password\"\n", s)
-					os.Exit(1)
-				}
-
-				confACL += fmt.Sprintf(`
-  - %s`, aclTrim)
-			}
-		}
-
-		conf := confServer + confACL + "\n"
+		conf := confServer + confACL + confAdminServer + confCommandURL + "\n"
 		saveConfigFile(conf)
 
 		fmt.Println("########################################")
@@ -111,4 +83,92 @@ func getConfigFilePath() string {
 	checkError(errors.Wrap(err, "fail to get homedir"))
 
 	return filepath.Join(home, ".zkcmd.yaml")
+}
+
+func inputClusterAddress(reader *bufio.Reader) string {
+	fmt.Println("Please input zookeeper cluster addresses, multiple addresses with a comma. Defaults to 127.0.0.1:2181 > ")
+	server, err := reader.ReadString('\n')
+	checkError(err)
+
+	serverTrim := strings.TrimSpace(server)
+
+	confServer := `server:`
+	if serverTrim == "" {
+		confServer += `
+  - 127.0.0.1:2181`
+	} else {
+		ss := strings.Split(serverTrim, ",")
+		for _, s := range ss {
+			confServer += fmt.Sprintf(`
+  - %s`, s)
+		}
+	}
+
+	return confServer
+}
+
+func inputClusterACL(reader *bufio.Reader) string {
+	confACL := `
+acl:`
+	fmt.Println(`Please input zookeeper cluster ACL, multiple ACL with a comma. EX: "user:password" > `)
+	acl, err := reader.ReadString('\n')
+	checkError(err)
+
+	aclTrim := strings.TrimSpace(acl)
+
+	if aclTrim != "" {
+		as := strings.Split(aclTrim, ",")
+		for _, s := range as {
+			ss := strings.Split(s, ":")
+			if len(ss) < 2 {
+				fmt.Printf("Invalid ACL input: %s, EX: \"user:password\"\n", s)
+				os.Exit(1)
+			}
+
+			confACL += fmt.Sprintf(`
+  - %s`, aclTrim)
+		}
+	}
+
+	return confACL
+}
+
+func inputAdminServerAddress(reader *bufio.Reader) string {
+	fmt.Println("Please input zookeeper AdminServer addresses, multiple addresses with a comma. Defaults to 127.0.0.1:8080 > ")
+	server, err := reader.ReadString('\n')
+	checkError(err)
+
+	serverTrim := strings.TrimSpace(server)
+
+	confAdminServer := `
+adminServer:`
+	if serverTrim == "" {
+		confAdminServer += `
+  - 127.0.0.1:8080`
+	} else {
+		ss := strings.Split(serverTrim, ",")
+		for _, s := range ss {
+			confAdminServer += fmt.Sprintf(`
+  - %s`, s)
+		}
+	}
+
+	return confAdminServer
+}
+
+func inputAdminServerCommandURL(reader *bufio.Reader) string {
+	fmt.Println("Please input zookeeper AdminServer commandURL. Defaults to /commands > ")
+	commandURL, err := reader.ReadString('\n')
+	checkError(err)
+
+	commandURLTrim := strings.TrimSpace(commandURL)
+
+	confCommandURL := `
+adminCommandURL: /commands`
+	if commandURLTrim != "" {
+		confCommandURL = fmt.Sprintf(`
+adminCommandURL: %s`, commandURLTrim)
+	}
+
+	return confCommandURL
 }
