@@ -6,15 +6,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func init() {
-	rootCmd.AddCommand(versionCmd)
-}
-
-var versionCmd = &cobra.Command{
-	Use:     "version",
-	Aliases: []string{"v"},
-	Short:   "Print version information of zkcmd and quit",
-	Run: func(cmd *cobra.Command, args []string) {
-		version.ShowVersion()
-	},
+func newCmdVersion() *cobra.Command {
+	return &cobra.Command{
+		Use:     "version",
+		Aliases: []string{"v"},
+		Short:   "Print version information of zkcmd and quit",
+		Run: func(cmd *cobra.Command, args []string) {
+			version.ShowVersion()
+		},
+	}
 }

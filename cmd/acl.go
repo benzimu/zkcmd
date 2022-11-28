@@ -10,66 +10,79 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func init() {
-	rootCmd.AddCommand(aclCmd)
+func newCmdACL() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "acl",
+		Short: "Znode ACL command",
+	}
 
-	aclCmd.AddCommand(aclGetCmd)
-	aclGetCmd.Flags().BoolVarP(&isStat, "stat", "s", false, "znode stat info")
+	cmd.AddCommand(newCmdACLGet())
+	cmd.AddCommand(newCmdACLSet())
 
-	aclCmd.AddCommand(aclSetCmd)
-	aclSetCmd.Flags().BoolVarP(&isStat, "stat", "s", false, "znode stat info")
-	aclSetCmd.Flags().StringVarP(&dataVersion, "version", "v", "", "znode data version")
+	return cmd
 }
 
-var aclCmd = &cobra.Command{
-	Use:   "acl",
-	Short: "Znode ACL command",
+func newCmdACLGet() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "get [flags] path",
+		Short: "Get znode acl",
+		Args:  cobra.ExactArgs(1),
+		Run:   cmdRunACLGet,
+	}
+
+	cmd.Flags().BoolVarP(&isStat, "stat", "s", false, "znode stat info")
+
+	return cmd
 }
 
-var aclGetCmd = &cobra.Command{
-	Use:   "get [flags] path",
-	Short: "Get znode acl",
-	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		newZKClient()
+func newCmdACLSet() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "set [flags] path acl",
+		Short: "Set znode acl",
+		Args:  cobra.ExactArgs(2),
+		Run:   cmdRunACLSet,
+	}
 
-		acls, stat, err := zkcli.GetACL(args[0])
-		checkError(err)
+	cmd.Flags().BoolVarP(&isStat, "stat", "s", false, "znode stat info")
+	cmd.Flags().StringVarP(&dataVersion, "version", "v", "", "znode data version")
 
-		w := tabwriter.NewWriter(os.Stdout, 6, 4, 3, '\t', 0)
-		fmt.Fprintf(w, "ChildrenNum:\t%v\t\n", stat.NumChildren)
-		fmt.Fprintf(w, "ACL:        \t%v\t\n", zookeeper.FormatACLs(acls))
-		w.Flush()
-
-		if isStat {
-			outputStat(stat)
-		}
-	},
+	return cmd
 }
 
-var aclSetCmd = &cobra.Command{
-	Use:   "set [flags] path acl",
-	Short: "Set znode acl",
-	Args:  cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
-		newZKClient()
+func cmdRunACLGet(cmd *cobra.Command, args []string) {
+	zkcli := newZKClient()
 
-		acls, err := zookeeper.ParseACL(args[1])
-		checkError(err)
+	acls, stat, err := zkcli.GetACL(args[0])
+	checkError(err)
 
-		exist, stat, err := zkcli.Exists(args[0])
-		checkError(err)
+	w := tabwriter.NewWriter(os.Stdout, 6, 4, 3, '\t', 0)
+	fmt.Fprintf(w, "ChildrenNum:\t%v\t\n", stat.NumChildren)
+	fmt.Fprintf(w, "ACL:        \t%v\t\n", zookeeper.FormatACLs(acls))
+	w.Flush()
 
-		if !exist {
-			checkError(zk.ErrNoNode)
-		}
+	if isStat {
+		outputStat(stat)
+	}
+}
 
-		version := checkDataVersion(stat.Aversion)
-		stat, err = zkcli.SetACL(args[0], acls, version)
-		checkError(err)
+func cmdRunACLSet(cmd *cobra.Command, args []string) {
+	zkcli := newZKClient()
 
-		if isStat {
-			outputStat(stat)
-		}
-	},
+	acls, err := zookeeper.ParseACL(args[1])
+	checkError(err)
+
+	exist, stat, err := zkcli.Exists(args[0])
+	checkError(err)
+
+	if !exist {
+		checkError(zk.ErrNoNode)
+	}
+
+	version := checkDataVersion(stat.Aversion)
+	stat, err = zkcli.SetACL(args[0], acls, version)
+	checkError(err)
+
+	if isStat {
+		outputStat(stat)
+	}
 }
