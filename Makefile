@@ -1,6 +1,6 @@
 BUILD_DATE          := $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
 GIT_COMMIT			:=$(shell git rev-parse "HEAD^{commit}" 2>/dev/null)
-GIT_VERSION         := $(shell describe --tags --match='v*' --abbrev=14 "$(GIT_COMMIT)^{commit}" 2>/dev/null)
+GIT_VERSION         := $(shell git describe --tags --match='v*' --abbrev=14 "$(GIT_COMMIT)^{commit}" 2>/dev/null)
 
 .PHONY: all
 all: style ut format vet install
