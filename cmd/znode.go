@@ -29,6 +29,9 @@ func newCmdZnode() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "znode",
 		Short: "Znode command",
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			zkcli = newZKClient()
+		},
 	}
 
 	cmd.AddCommand(newCmdZnodeLs())
@@ -128,8 +131,6 @@ func newCmdZnodeDelete() *cobra.Command {
 }
 
 func cmdRunZnodeLs(cmd *cobra.Command, args []string) {
-	zkcli := newZKClient()
-
 	path := "/"
 	if len(args) > 0 {
 		path = args[0]
@@ -160,8 +161,6 @@ func cmdRunZnodeLs(cmd *cobra.Command, args []string) {
 }
 
 func cmdRunZnodeLsn(cmd *cobra.Command, args []string) {
-	zkcli := newZKClient()
-
 	path := "/"
 	if len(args) > 0 {
 		path = args[0]
@@ -184,14 +183,12 @@ func cmdRunZnodeLsn(cmd *cobra.Command, args []string) {
 }
 
 func cmdRunZnodeGet(cmd *cobra.Command, args []string) {
-	zkcli := newZKClient()
-
 	d, stat, err := zkcli.Get(args[0])
 	checkError(err)
 
 	w := tabwriter.NewWriter(os.Stdout, 6, 4, 3, '\t', 0)
 	fmt.Fprintf(w, "ChildrenNum:\t%v\t\n", stat.NumChildren)
-	fmt.Fprintf(w, "Value:      \t%v\t\n", string(d))
+	fmt.Fprintf(w, "Value:      \t\n%v\t\n", string(d))
 	w.Flush()
 
 	if isStat {
@@ -200,8 +197,6 @@ func cmdRunZnodeGet(cmd *cobra.Command, args []string) {
 }
 
 func cmdRunZnodeSet(cmd *cobra.Command, args []string) {
-	zkcli := newZKClient()
-
 	path := args[0]
 	data := args[1]
 
@@ -242,8 +237,6 @@ func cmdRunZnodeSet(cmd *cobra.Command, args []string) {
 }
 
 func cmdRunZnodeCreate(cmd *cobra.Command, args []string) {
-	zkcli := newZKClient()
-
 	path := args[0]
 
 	var data string
@@ -305,8 +298,6 @@ func cmdRunZnodeCreate(cmd *cobra.Command, args []string) {
 }
 
 func cmdRunZnodeDelete(cmd *cobra.Command, args []string) {
-	zkcli := newZKClient()
-
 	exist, stat, err := zkcli.Exists(args[0])
 	checkError(err)
 

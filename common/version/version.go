@@ -9,7 +9,7 @@ import (
 // set by build LD_FLAGS
 var (
 	version   string
-	buildTime string
+	buildDate string
 	gitCommit string
 )
 
@@ -17,10 +17,11 @@ var (
 type Version struct {
 	Version   string `json:"version"`
 	GitCommit string `json:"commit"`
-	BuildTime string `json:"build_time"`
+	BuildDate string `json:"build_date"`
 	GoVersion string `json:"go_version"`
-	Os        string `json:"os"`
+	OS        string `json:"os"`
 	Arch      string `json:"arch"`
+	Compiler  string `json:"compiler"`
 }
 
 // Get get Version instance
@@ -28,10 +29,11 @@ func Get() *Version {
 	return &Version{
 		Version:   version,
 		GitCommit: gitCommit,
-		BuildTime: buildTime,
+		BuildDate: buildDate,
 		GoVersion: runtime.Version(),
-		Os:        runtime.GOOS,
+		OS:        runtime.GOOS,
 		Arch:      runtime.GOARCH,
+		Compiler:  runtime.Compiler,
 	}
 }
 
@@ -43,11 +45,14 @@ func ShowVersion() {
 
 // String return Version format string
 func (v *Version) String() string {
-	versionInfo := `Version:      ` + Get().Version + `
-Git commit:   ` + Get().GitCommit + `
-Go version:   ` + Get().GoVersion + `
-Built time:   ` + Get().BuildTime + `
-OS/Arch:      ` + Get().Os + "/" + Get().Arch
-
-	return versionInfo
+	return fmt.Sprintf(`Version:      %s
+Git commit:   %s
+Go version:   %s
+Built date:   %s
+Platform:     %s`,
+		Get().Version,
+		Get().GitCommit,
+		Get().GoVersion,
+		Get().BuildDate,
+		fmt.Sprintf("%s/%s", Get().OS, Get().Arch))
 }

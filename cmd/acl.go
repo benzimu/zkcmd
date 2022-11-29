@@ -14,6 +14,9 @@ func newCmdACL() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "acl",
 		Short: "Znode ACL command",
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			zkcli = newZKClient()
+		},
 	}
 
 	cmd.AddCommand(newCmdACLGet())
@@ -50,8 +53,6 @@ func newCmdACLSet() *cobra.Command {
 }
 
 func cmdRunACLGet(cmd *cobra.Command, args []string) {
-	zkcli := newZKClient()
-
 	acls, stat, err := zkcli.GetACL(args[0])
 	checkError(err)
 
@@ -66,8 +67,6 @@ func cmdRunACLGet(cmd *cobra.Command, args []string) {
 }
 
 func cmdRunACLSet(cmd *cobra.Command, args []string) {
-	zkcli := newZKClient()
-
 	acls, err := zookeeper.ParseACL(args[1])
 	checkError(err)
 

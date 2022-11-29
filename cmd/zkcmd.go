@@ -15,6 +15,8 @@ import (
 var (
 	cfgFile string
 	verbose bool
+
+	zkcli *zookeeper.Client
 )
 
 func Execute() {
@@ -27,7 +29,8 @@ func newRootCommand() *cobra.Command {
 		Use:   "zkcmd",
 		Short: "A brief description of your application",
 		Long: `zkcmd is a command tool for zookeeper cluster management.
-	This application can connect zookeeper server and create/delete/set node.`,
+  This application can connect zookeeper server and list/create/delete/set znode.
+  And use The Four Letter Words command, see: https://zookeeper.apache.org/doc/current/zookeeperAdmin.html#sc_4lw`,
 	}
 
 	cmd.PersistentFlags().StringVarP(&cfgFile, "config", "", "", `config file. (default "$HOME/.zkcmd.yaml")`)
